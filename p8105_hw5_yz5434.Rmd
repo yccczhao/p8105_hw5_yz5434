@@ -141,5 +141,105 @@ longitudinal_df |>
 Observations in the control group fluctuate over time without a clear overall trend. Observations in the experimental group generally increase over the eight weeks. By the end of the study, the experimental group tends to have higher observation values than the control group. There is also some variability among individuals within each group.
 
 
+## Problem 3
+
+```{r}
+sim_t_test = function(mu) {
+  sim_data = tibble(
+    x = rnorm(n = 30, mean = mu, sd = 5)
+  )
+
+  t.test(sim_data$x, mu = 0) |>
+    broom::tidy() |>
+    select(estimate, p.value)
+}
+```
+
+```{r}
+set.seed(123)
+
+sim_results = expand_grid(
+  mu = 0:6,
+  sim = 1:5000
+) |>
+  mutate(
+    results = map(mu, sim_t_test)
+  ) |>
+  unnest(cols = results)
+```
+
+```{r}
+power_df = sim_results |>
+  group_by(mu) |>
+  summarize(
+    power = mean(p.value < 0.05)
+  )
+
+power_df
+```
+
+```{r}
+power_df |>
+  ggplot(aes(x = mu, y = power)) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  geom_point(color = "steelblue", size = 2) +
+  labs(
+    title = "Statistical Power by True Mean",
+    x = "True Mean (mu)",
+    y = "Proportion of Null Hypotheses Rejected"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+mean_estimates = sim_results |>
+  group_by(mu) |>
+  summarize(
+    mean_estimate = mean(estimate),
+    mean_estimate_rejected = mean(estimate[p.value < 0.05])
+  )
+
+mean_estimates
+```
+
+```{r}
+
+mean_estimates |>
+  pivot_longer(
+    cols = c(mean_estimate, mean_estimate_rejected),
+    names_to = "estimate_type",
+    values_to = "average_estimate"
+  ) |>
+  ggplot(aes(
+    x = mu,
+    y = average_estimate,
+    color = estimate_type
+  )) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  geom_abline(
+    slope = 1,
+    intercept = 0,
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  labs(
+    title = "Average Estimated Mean vs. True Mean",
+    x = "True Mean (mu)",
+    y = "Average Estimated Mean",
+    color = "Estimate Type"
+  ) +
+  theme_minimal()
+```
+
+
+The average estimated mean across all simulations is approximately equal to the true mean, indicating that the sample mean is an unbiased estimator.
+
+However, when considering only samples where the null hypothesis was rejected, the average estimated mean tends to be higher than the true mean, especially for smaller positive effect sizes. For example, when μ = 1, the average estimate among rejected samples is `r round(mean_estimates$mean_estimate_rejected[mean_estimates$mu == 1], 2)`, compared to `r round(mean_estimates$mean_estimate[mean_estimates$mu == 1], 2)` across all samples.
+
+This occurs because samples with more extreme estimates are more likely to produce statistically significant results, leading to selection bias. As the true mean increases and statistical power approaches 1, the difference between the two estimates becomes smaller.
+
+
+
 
 
