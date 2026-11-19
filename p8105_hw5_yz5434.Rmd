@@ -60,8 +60,7 @@ birthday_prob |>
 
 ```
 
-The probability that at least two people share a birthday increases as group size increases. When there are approximately 23 people in a room, the probability exceeds 50%. By the time the group size reaches 50, the probability is approximately 97%. This result illustrates the birthday paradox, which shows that shared birthdays are more likely than we might intuitively expect.
-
+The probability that at least two people share a birthday increases as group size increases. For a group of 23 people, the simulated probability is `r round(birthday_prob$probability[birthday_prob$n_room == 23], 3)`. By the time the group size reaches 50, the probability is approximately `r round(birthday_prob$probability[birthday_prob$n_room == 50], 3)`. This result illustrates the birthday paradox, which shows that shared birthdays are more likely than we might intuitively expect.
 
 ## Problem 2
 
@@ -191,6 +190,7 @@ power_df |>
   theme_minimal()
 ```
 
+The proportion of rejected null hypotheses increases as the true mean increases. When the true mean is zero, the rejection rate is approximately `r round(power_df$power[power_df$mu == 0], 3)`, which is close to the significance level of 0.05. As the true mean moves further away from zero, statistical power increases and eventually approaches 1. This suggests that larger effect sizes are easier to detect when the sample size and standard deviation are held constant.
 ```{r}
 mean_estimates = sim_results |>
   group_by(mu) |>
